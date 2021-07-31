@@ -89,6 +89,18 @@ LRESULT CMainFrame::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	return 1;
 }
 
+LRESULT CMainFrame::OnShowWindow(UINT, WPARAM, LPARAM, BOOL& bHandled) {
+	static bool show = false;
+	if (show)
+		return 0;
+
+	auto wp = AppSettings::Get().MainWindowPlacement();
+	if (wp.showCmd != SW_HIDE)
+		SetWindowPlacement(&wp);
+
+	return 0;
+}
+
 LRESULT CMainFrame::OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	PostMessage(WM_CLOSE);
 	return 0;
@@ -135,6 +147,7 @@ LRESULT CMainFrame::OnTimer(UINT, WPARAM id, LPARAM, BOOL& bHandled) {
 	if (id == 1) {
 		if (m_Timer.IsExpired()) {
 			Invalidate();
+			UISetCheck(ID_TIMER_RUN, FALSE);
 		}
 		else {
 			auto text = m_Timer.GetRemaingTimeAsString();
@@ -179,6 +192,8 @@ LRESULT CMainFrame::OnConfigure(WORD, WORD, HWND, BOOL&) {
 	dlg.SetInterval(m_Timer.GetMinutes(), m_Timer.GetSeconds());
 	if (dlg.DoModal() == IDOK) {
 		m_Timer.Init(dlg.GetSeconds(), dlg.GetMinutes());
+		UISetCheck(ID_TIMER_RUN, false);
+		UISetCheck(ID_TIMER_PAUSE, false);
 	}
 	return 0;
 }
