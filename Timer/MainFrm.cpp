@@ -33,8 +33,6 @@ void CMainFrame::DoPaint(CDCHandle dc) {
 		dc.SetTextColor(RGB(128, 0, 0));
 	CString text(m_LastText);
 
-	//if (m_Timer.IsRunning() && !m_Timer.IsPaused() && (::GetTickCount64() / 1000) & 1)
-	//	text.SetAt(2, L' ');
 	dc.SetBkMode(TRANSPARENT);
 	dc.DrawText(text, -1, &rc, DT_VCENTER | DT_CENTER | DT_SINGLELINE);
 }
@@ -64,7 +62,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	m_LastText = m_Timer.GetRemaingTimeAsString();
 	SetAlwaysOnTop(settings.AlwaysOnTop());
 
-	SetTimer(1, 200, nullptr);
+	SetTimer(1, 200);
 
 	return 0;
 }
@@ -103,25 +101,6 @@ LRESULT CMainFrame::OnShowWindow(UINT, WPARAM, LPARAM, BOOL& bHandled) {
 
 LRESULT CMainFrame::OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	PostMessage(WM_CLOSE);
-	return 0;
-}
-
-LRESULT CMainFrame::OnViewToolBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	static BOOL bVisible = TRUE;	// initially visible
-	bVisible = !bVisible;
-	CReBarCtrl rebar = m_hWndToolBar;
-	int nBandIndex = rebar.IdToIndex(ATL_IDW_BAND_FIRST);	// toolbar is first 1st band
-	rebar.ShowBand(nBandIndex, bVisible);
-	UISetCheck(ID_VIEW_TOOLBAR, bVisible);
-	UpdateLayout();
-	return 0;
-}
-
-LRESULT CMainFrame::OnViewStatusBar(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	BOOL bVisible = !::IsWindowVisible(m_hWndStatusBar);
-	::ShowWindow(m_hWndStatusBar, bVisible ? SW_SHOWNOACTIVATE : SW_HIDE);
-	UISetCheck(ID_VIEW_STATUS_BAR, bVisible);
-	UpdateLayout();
 	return 0;
 }
 
