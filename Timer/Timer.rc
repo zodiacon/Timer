@@ -201,8 +201,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 0,2,0,0
+ PRODUCTVERSION 0,2,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -215,15 +215,16 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "040904B0"
+        BLOCK "040904b0"
         BEGIN
-            VALUE "FileDescription", "Timer Module"
-            VALUE "FileVersion", "1, 0, 0, 1"
+            VALUE "CompanyName", "Scorpio Software"
+            VALUE "FileDescription", "Simple Timer"
+            VALUE "FileVersion", "0.2.0.0"
             VALUE "InternalName", "Timer"
-            VALUE "LegalCopyright", "Copyright 2021"
+            VALUE "LegalCopyright", "(C)2021-2026 Pavel Yosifovich"
             VALUE "OriginalFilename", "Timer.exe"
-            VALUE "ProductName", "Timer Module"
-            VALUE "ProductVersion", "1, 0, 0, 1"
+            VALUE "ProductName", "Simple Timer"
+            VALUE "ProductVersion", "0.2.0.0"
         END
     END
     BLOCK "VarFileInfo"
