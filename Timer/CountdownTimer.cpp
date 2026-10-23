@@ -1,14 +1,13 @@
 #include "pch.h"
 #include "CountdownTimer.h"
 
-bool CountdownTimer::Init(unsigned sec, unsigned min, unsigned hours) {
+bool CountdownTimer::Init(unsigned sec, unsigned min) {
 	_seconds = sec;
 	_minutes = min;
-	_hours = hours;
 
 	_running = _paused = _expired = false;
 
-	_totalSec = _hours * 3600 + _minutes * 60 + _seconds;
+	_totalSec = _minutes * 60 + _seconds;
 	if (_totalSec == 0)
 		return false;
 
@@ -23,26 +22,31 @@ unsigned CountdownTimer::GetMinutes() const {
 	return _minutes;
 }
 
-CString CountdownTimer::GetRemaingTimeAsString() {
+unsigned CountdownTimer::GetElapsedSeconds() const {
+	if (!_running)
+		return 0;
 	auto tick = _paused ? _pause : ::GetTickCount64();
-	auto sec = _running ? (tick - _current) / 1000 : 0;
-	unsigned min = 0;
-	if (_running && sec >= _totalSec) {
-		sec = 0;
-		_expired = true;
-	}
-	else {
-		sec = _totalSec - sec;
-		min = (unsigned)(sec / 60);
-		sec -= min * 60;
-	}
+	return (unsigned)((tick - _current) / 1000);
+}
+
+bool CountdownTimer::Update() {
+	if (!_running || _expired || GetElapsedSeconds() < _totalSec)
+		return false;
+
+	_expired = true;
+	return true;
+}
+
+CString CountdownTimer::GetRemainingTimeAsString() const {
+	auto elapsed = GetElapsedSeconds();
+	auto sec = elapsed >= _totalSec ? 0 : _totalSec - elapsed;
 	CString text;
-	text.Format(L"%02d:%02d", min, sec);
+	text.Format(L"%02u:%02u", sec / 60, sec % 60);
 
 	return text;
 }
 
-bool CountdownTimer::Start(std::function<void()> whenDone) {
+bool CountdownTimer::Start() {
 	// an expired timer starts over
 	if (_running && !_expired) {
 		if (_paused)
@@ -79,9 +83,7 @@ bool CountdownTimer::Resume() {
 }
 
 void CountdownTimer::Stop() {
-	_running = false;
-	_expired = false;
-	Init(_seconds, _minutes, _hours);
+	Init(_seconds, _minutes);
 }
 
 bool CountdownTimer::IsRunning() const {

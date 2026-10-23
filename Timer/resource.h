@@ -14,10 +14,18 @@
 #define IDD_CONFIG                      201
 #define IDI_ICON1                       203
 #define IDI_PIN                         203
+#define IDD_COLORS                      204
 #define IDC_MIN                         1000
 #define IDC_MINSPIN                     1001
 #define IDC_SEC                         1002
 #define IDC_SECSPIN                     1003
+#define IDC_COLOR_BACK                  1004
+#define IDC_COLOR_EXPIREDBACK           1005
+#define IDC_COLOR_STOPPED               1006
+#define IDC_COLOR_RUNNING               1007
+#define IDC_COLOR_PAUSED                1008
+#define IDC_COLOR_EXPIRED               1009
+#define IDC_DEFAULTS                    1010
 #define ID_TIMER_RUN                    32775
 #define ID_TIMER_STOP                   32776
 #define ID_TIMER_PAUSE                  32777
@@ -30,9 +38,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        204
+#define _APS_NEXT_RESOURCE_VALUE        205
 #define _APS_NEXT_COMMAND_VALUE         32782
-#define _APS_NEXT_CONTROL_VALUE         1004
+#define _APS_NEXT_CONTROL_VALUE         1011
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -31,7 +31,7 @@ struct Setting {
 
 	template<typename T>
 	void Set(const T& value) {
-		Buffer = std::make_unique<uint8_t[]>(sizeof(T));
+		Buffer = std::make_unique<uint8_t[]>(Size = sizeof(T));
 		memcpy(Buffer.get(), &value, sizeof(T));
 	}
 

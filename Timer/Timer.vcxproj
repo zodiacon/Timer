@@ -207,6 +207,7 @@
   <ItemGroup>
     <ClCompile Include="AboutDlg.cpp" />
     <ClCompile Include="Chime.cpp" />
+    <ClCompile Include="ColorsDlg.cpp" />
     <ClCompile Include="ConfigDlg.cpp" />
     <ClCompile Include="CountdownTimer.cpp" />
     <ClCompile Include="MainFrm.cpp" />
@@ -223,6 +224,7 @@
     <ClInclude Include="AboutDlg.h" />
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="Chime.h" />
+    <ClInclude Include="ColorsDlg.h" />
     <ClInclude Include="ConfigDlg.h" />
     <ClInclude Include="CountdownTimer.h" />
     <ClInclude Include="MainFrm.h" />

@@ -1,18 +1,17 @@
 #pragma once
 
-#include <functional>
-
 class CountdownTimer {
 public:
-	bool Init(unsigned sec, unsigned min = 0, unsigned hours = 0);
-	void SetCountForward(bool forward);
+	bool Init(unsigned sec, unsigned min = 0);
 
 	unsigned GetSeconds() const;
 	unsigned GetMinutes() const;
 
-	CString GetRemaingTimeAsString();
+	// returns true only on the call where the countdown reaches zero
+	bool Update();
+	CString GetRemainingTimeAsString() const;
 
-	bool Start(std::function<void()> whenDone);
+	bool Start();
 	bool Pause();
 	bool Resume();
 	void Stop();
@@ -22,7 +21,9 @@ public:
 	bool IsPaused() const;
 
 private:
-	unsigned _hours{ 0 }, _minutes{ 1 }, _seconds{ 0 };
+	unsigned GetElapsedSeconds() const;
+
+	unsigned _minutes{ 1 }, _seconds{ 0 };
 	unsigned _totalSec{ 0 };
 	DWORD64 _current, _pause;
 	bool _running{ false }, _paused{ false };

@@ -7,6 +7,7 @@
 #include "aboutdlg.h"
 #include "MainFrm.h"
 #include "ConfigDlg.h"
+#include "ColorsDlg.h"
 #include "AppSettings.h"
 
 BOOL CMainFrame::PreTranslateMessage(MSG* pMsg) {
@@ -21,16 +22,19 @@ BOOL CMainFrame::OnIdle() {
 void CMainFrame::DoPaint(CDCHandle dc) {
 	CRect rc;
 	GetClientRect(&rc);
-	dc.FillSolidRect(&rc, m_Timer.IsExpired() ? RGB(0, 128, 0) : RGB(240, 240, 240));
+	auto& settings = AppSettings::Get();
+	dc.FillSolidRect(&rc, settings.Color(m_Timer.IsExpired() ? TimerColor::ExpiredBackground : TimerColor::Background));
 
 	rc.top += 40;
 	dc.SelectFont(m_Font);
 	if (m_Timer.IsExpired())
-		dc.SetTextColor(RGB(0, 255, 0));
+		dc.SetTextColor(settings.Color(TimerColor::ExpiredText));
 	else if (m_Timer.IsPaused())
-		dc.SetTextColor(RGB(0, 0, 255));
+		dc.SetTextColor(settings.Color(TimerColor::PausedText));
 	else if (m_Timer.IsRunning())
-		dc.SetTextColor(RGB(128, 0, 0));
+		dc.SetTextColor(settings.Color(TimerColor::RunningText));
+	else
+		dc.SetTextColor(settings.Color(TimerColor::StoppedText));
 	CString text(m_LastText);
 
 	dc.SetBkMode(TRANSPARENT);
@@ -59,7 +63,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	auto& settings = AppSettings::Get();
 
 	m_Timer.Init(settings.Seconds(), settings.Minutes());
-	m_LastText = m_Timer.GetRemaingTimeAsString();
+	m_LastText = m_Timer.GetRemainingTimeAsString();
 	SetAlwaysOnTop(settings.AlwaysOnTop());
 
 	SetTimer(1, 200);
@@ -91,6 +95,7 @@ LRESULT CMainFrame::OnShowWindow(UINT, WPARAM, LPARAM, BOOL& bHandled) {
 	static bool show = false;
 	if (show)
 		return 0;
+	show = true;
 
 	auto wp = AppSettings::Get().MainWindowPlacement();
 	if (wp.showCmd != SW_HIDE)
@@ -125,26 +130,23 @@ LRESULT CMainFrame::OnSize(UINT, WPARAM, LPARAM lp, BOOL& bHandled) {
 LRESULT CMainFrame::OnTimer(UINT, WPARAM id, LPARAM, BOOL& bHandled) {
 	// nothing changes once expired, until the user acts
 	if (id == 1 && !m_Timer.IsExpired()) {
-		auto text = m_Timer.GetRemaingTimeAsString();
-		if (m_Timer.IsExpired()) {
+		if (m_Timer.Update()) {
 			UISetCheck(ID_TIMER_RUN, FALSE);
 			UISetCheck(ID_TIMER_PAUSE, FALSE);
 			m_Chime.Play();
 			Invalidate();
 		}
+		auto text = m_Timer.GetRemainingTimeAsString();
 		if (text != m_LastText) {
 			m_LastText = text;
 			Invalidate();
-			if (m_Timer.IsRunning() && !m_Timer.IsPaused()) {
-				//::Beep(800, 50);
-			}
 		}
 	}
 	return 0;
 }
 
 LRESULT CMainFrame::OnRun(WORD, WORD, HWND, BOOL&) {
-	if (m_Timer.Start(nullptr)) {
+	if (m_Timer.Start()) {
 		UISetCheck(ID_TIMER_RUN, true);
 		UISetCheck(ID_TIMER_PAUSE, false);
 	}
@@ -176,6 +178,13 @@ LRESULT CMainFrame::OnConfigure(WORD, WORD, HWND, BOOL&) {
 		UISetCheck(ID_TIMER_RUN, false);
 		UISetCheck(ID_TIMER_PAUSE, false);
 	}
+	return 0;
+}
+
+LRESULT CMainFrame::OnColors(WORD, WORD, HWND, BOOL&) {
+	CColorsDlg dlg;
+	if (dlg.DoModal() == IDOK)
+		Invalidate();
 	return 0;
 }
 
