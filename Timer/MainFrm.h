@@ -26,6 +26,8 @@ public:
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
 		MESSAGE_HANDLER(WM_SIZE, OnSize)
+		MESSAGE_HANDLER(s_TaskbarButtonCreated, OnTaskbarButtonCreated)
+		NOTIFY_CODE_HANDLER(TBN_DROPDOWN, OnToolbarDropDown)
 		COMMAND_ID_HANDLER(ID_TIMER_RUN, OnRun)
 		COMMAND_ID_HANDLER(ID_TIMER_STOP, OnStop)
 		COMMAND_ID_HANDLER(ID_TIMER_PAUSE, OnPause)
@@ -34,6 +36,7 @@ public:
 		COMMAND_ID_HANDLER(ID_TIMER_COLORS, OnColors)
 		COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
 		COMMAND_ID_HANDLER(ID_OPTIONS_ALWAYSONTOP, OnAlwaysOnTop)
+		COMMAND_ID_HANDLER(ID_OPTIONS_CHIME, OnChime)
 		COMMAND_ID_HANDLER(ID_APP_ABOUT, OnAppAbout)
 		MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
 		CHAIN_MSG_MAP(CDoubleBufferImpl<CMainFrame>)
@@ -49,6 +52,10 @@ public:
 private:
 	void InitToolBar(CToolBarCtrl& tb, int size = 24);
 	void SetAlwaysOnTop(bool ontop);
+	void SetInterval(unsigned min, unsigned sec);
+	void UpdateTitleAndTaskbar();
+
+	static inline const UINT s_TaskbarButtonCreated = ::RegisterWindowMessage(L"TaskbarButtonCreated");
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled);
@@ -64,9 +71,15 @@ private:
 	LRESULT OnColors(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnRestart(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnAlwaysOnTop(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnChime(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnTaskbarButtonCreated(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT OnToolbarDropDown(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 
 	CountdownTimer m_Timer;
 	Chime m_Chime;
 	CFont m_Font;
 	CString m_LastText;
+	CString m_LastTitle;
+	CComPtr<ITaskbarList3> m_Taskbar;
+	TBPFLAG m_TaskbarState{ TBPF_NOPROGRESS };
 };

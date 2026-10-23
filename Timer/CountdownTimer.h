@@ -10,6 +10,8 @@ public:
 	// returns true only on the call where the countdown reaches zero
 	bool Update();
 	CString GetRemainingTimeAsString() const;
+	// fraction of the interval that has elapsed, 0 to 1
+	double GetProgress() const;
 
 	bool Start();
 	bool Pause();
@@ -21,6 +23,7 @@ public:
 	bool IsPaused() const;
 
 private:
+	DWORD64 GetElapsedMilliseconds() const;
 	unsigned GetElapsedSeconds() const;
 
 	unsigned _minutes{ 1 }, _seconds{ 0 };

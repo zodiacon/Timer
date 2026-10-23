@@ -111,6 +111,8 @@ IDI_ABOUT               ICON                    "res\\about.ico"
 
 IDI_PIN                 ICON                    "res\\pin.ico"
 
+IDI_CHIME               ICON                    "res\\chime.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -329,10 +331,11 @@ BEGIN
     ID_TIMER_RUN            "\nRun"
     ID_TIMER_STOP           "\nStop"
     ID_TIMER_PAUSE          "\nPause"
-    ID_TIMER_CONFIGURE      "\nConfigure"
+    ID_TIMER_CONFIGURE      "\nConfigure (arrow for presets)"
     ID_TIMER_RESTART        "\nRestart"
     ID_TIMER_COLORS         "\nColors"
     ID_OPTIONS_ALWAYSONTOP  "\nAlways On Top"
+    ID_OPTIONS_CHIME        "\nChime When Done"
 END
 
 STRINGTABLE

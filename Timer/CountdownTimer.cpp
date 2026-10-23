@@ -22,11 +22,22 @@ unsigned CountdownTimer::GetMinutes() const {
 	return _minutes;
 }
 
-unsigned CountdownTimer::GetElapsedSeconds() const {
+DWORD64 CountdownTimer::GetElapsedMilliseconds() const {
 	if (!_running)
 		return 0;
 	auto tick = _paused ? _pause : ::GetTickCount64();
-	return (unsigned)((tick - _current) / 1000);
+	return tick - _current;
+}
+
+unsigned CountdownTimer::GetElapsedSeconds() const {
+	return (unsigned)(GetElapsedMilliseconds() / 1000);
+}
+
+double CountdownTimer::GetProgress() const {
+	if (_totalSec == 0)
+		return 0;
+	auto progress = GetElapsedMilliseconds() / (_totalSec * 1000.0);
+	return progress > 1 ? 1 : progress;
 }
 
 bool CountdownTimer::Update() {

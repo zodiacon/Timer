@@ -23,6 +23,7 @@ extern CAppModule _Module;
 #include <atlframe.h>
 #include <atlctrls.h>
 #include <atldlgs.h>
+#include <shobjidl.h>
 #include <string>
 #include <map>
 #include <memory>

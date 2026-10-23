@@ -65,6 +65,10 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	m_Timer.Init(settings.Seconds(), settings.Minutes());
 	m_LastText = m_Timer.GetRemainingTimeAsString();
 	SetAlwaysOnTop(settings.AlwaysOnTop());
+	UISetCheck(ID_OPTIONS_CHIME, settings.ChimeEnabled());
+
+	// let Explorer's message through if running elevated
+	::ChangeWindowMessageFilterEx(m_hWnd, s_TaskbarButtonCreated, MSGFLT_ALLOW, nullptr);
 
 	SetTimer(1, 200);
 
@@ -133,7 +137,11 @@ LRESULT CMainFrame::OnTimer(UINT, WPARAM id, LPARAM, BOOL& bHandled) {
 		if (m_Timer.Update()) {
 			UISetCheck(ID_TIMER_RUN, FALSE);
 			UISetCheck(ID_TIMER_PAUSE, FALSE);
-			m_Chime.Play();
+			if (AppSettings::Get().ChimeEnabled())
+				m_Chime.Play();
+			// flash the taskbar button until the user switches to the window
+			FLASHWINFO fi{ sizeof(fi), m_hWnd, FLASHW_ALL | FLASHW_TIMERNOFG };
+			::FlashWindowEx(&fi);
 			Invalidate();
 		}
 		auto text = m_Timer.GetRemainingTimeAsString();
@@ -142,6 +150,8 @@ LRESULT CMainFrame::OnTimer(UINT, WPARAM id, LPARAM, BOOL& bHandled) {
 			Invalidate();
 		}
 	}
+	if (id == 1)
+		UpdateTitleAndTaskbar();
 	return 0;
 }
 
@@ -173,12 +183,41 @@ LRESULT CMainFrame::OnStop(WORD, WORD, HWND, BOOL&) {
 LRESULT CMainFrame::OnConfigure(WORD, WORD, HWND, BOOL&) {
 	CConfigDlg dlg;
 	dlg.SetInterval(m_Timer.GetMinutes(), m_Timer.GetSeconds());
-	if (dlg.DoModal() == IDOK) {
-		m_Timer.Init(dlg.GetSeconds(), dlg.GetMinutes());
-		UISetCheck(ID_TIMER_RUN, false);
-		UISetCheck(ID_TIMER_PAUSE, false);
-	}
+	if (dlg.DoModal() == IDOK)
+		SetInterval(dlg.GetMinutes(), dlg.GetSeconds());
 	return 0;
+}
+
+LRESULT CMainFrame::OnToolbarDropDown(int, LPNMHDR pnmh, BOOL& bHandled) {
+	auto tb = (NMTOOLBAR*)pnmh;
+	if (tb->iItem != ID_TIMER_CONFIGURE) {
+		bHandled = FALSE;
+		return TBDDRET_NODEFAULT;
+	}
+
+	static const unsigned presets[] = { 1, 2, 3, 5, 10, 15, 20, 25, 30, 45, 60 };
+	CMenu menu;
+	menu.CreatePopupMenu();
+	for (int i = 0; i < _countof(presets); i++) {
+		CString text;
+		text.Format(L"%u minute%s", presets[i], presets[i] == 1 ? L"" : L"s");
+		bool current = m_Timer.GetMinutes() == presets[i] && m_Timer.GetSeconds() == 0;
+		menu.AppendMenu(MF_STRING | (current ? MF_CHECKED : 0), i + 1, text);
+	}
+
+	CRect rc(tb->rcButton);
+	::MapWindowPoints(tb->hdr.hwndFrom, nullptr, (POINT*)&rc, 2);
+	int cmd = menu.TrackPopupMenu(TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, rc.left, rc.bottom, m_hWnd);
+	if (cmd > 0)
+		SetInterval(presets[cmd - 1], 0);
+	return TBDDRET_DEFAULT;
+}
+
+void CMainFrame::SetInterval(unsigned min, unsigned sec) {
+	m_Timer.Init(sec, min);
+	UISetCheck(ID_TIMER_RUN, false);
+	UISetCheck(ID_TIMER_PAUSE, false);
+	Invalidate();
 }
 
 LRESULT CMainFrame::OnColors(WORD, WORD, HWND, BOOL&) {
@@ -204,10 +243,61 @@ LRESULT CMainFrame::OnAlwaysOnTop(WORD, WORD id, HWND, BOOL&) {
 	return 0;
 }
 
+LRESULT CMainFrame::OnChime(WORD, WORD id, HWND, BOOL&) {
+	auto& settings = AppSettings::Get();
+	bool enabled;
+	settings.ChimeEnabled(enabled = !settings.ChimeEnabled());
+	UISetCheck(id, enabled);
+	if (!enabled)
+		m_Chime.Stop();
+
+	return 0;
+}
+
+LRESULT CMainFrame::OnTaskbarButtonCreated(UINT, WPARAM, LPARAM, BOOL&) {
+	// sent again if Explorer restarts, with a fresh button
+	m_Taskbar.Release();
+	if (SUCCEEDED(m_Taskbar.CoCreateInstance(CLSID_TaskbarList)) && FAILED(m_Taskbar->HrInit()))
+		m_Taskbar.Release();
+	m_TaskbarState = TBPF_NOPROGRESS;
+	UpdateTitleAndTaskbar();
+	return 0;
+}
+
+void CMainFrame::UpdateTitleAndTaskbar() {
+	CString title;
+	if (m_Timer.IsExpired())
+		title = L"Time's up - ";
+	else if (m_Timer.IsPaused())
+		title = m_LastText + L" (Paused) - ";
+	else if (m_Timer.IsRunning())
+		title = m_LastText + L" - ";
+	CString name;
+	name.LoadString(IDR_MAINFRAME);
+	title += name;
+	if (title != m_LastTitle) {
+		m_LastTitle = title;
+		SetWindowText(title);
+	}
+
+	if (!m_Taskbar)
+		return;
+
+	auto state = !m_Timer.IsRunning() || m_Timer.IsExpired() ? TBPF_NOPROGRESS :
+		m_Timer.IsPaused() ? TBPF_PAUSED : TBPF_NORMAL;
+	if (state != m_TaskbarState) {
+		m_TaskbarState = state;
+		m_Taskbar->SetProgressState(m_hWnd, state);
+	}
+	if (state != TBPF_NOPROGRESS)
+		m_Taskbar->SetProgressValue(m_hWnd, (ULONGLONG)(m_Timer.GetProgress() * 1000), 1000);
+}
+
 void CMainFrame::InitToolBar(CToolBarCtrl& tb, int size) {
 	CImageList tbImages;
 	tbImages.Create(size, size, ILC_COLOR32, 8, 4);
 	tb.SetImageList(tbImages);
+	tb.SetExtendedStyle(TBSTYLE_EX_DRAWDDARROWS);
 
 	const struct {
 		UINT id;
@@ -222,8 +312,9 @@ void CMainFrame::InitToolBar(CToolBarCtrl& tb, int size) {
 		{ ID_TIMER_RESTART, IDI_RESTART },
 		{ 0 },
 		{ ID_TIMER_COLORS , IDI_COLORS },
-		{ ID_TIMER_CONFIGURE , IDI_CONFIGURE },
+		{ ID_TIMER_CONFIGURE , IDI_CONFIGURE, BTNS_DROPDOWN },
 		{ ID_OPTIONS_ALWAYSONTOP, IDI_PIN },
+		{ ID_OPTIONS_CHIME, IDI_CHIME },
 		{ 0 },
 		{ ID_APP_ABOUT, IDI_ABOUT },
 	};

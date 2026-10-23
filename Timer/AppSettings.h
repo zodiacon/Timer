@@ -18,6 +18,7 @@ struct AppSettings : Settings {
 		SETTING(Minutes, 1, SettingType::Int32);
 		SETTING(Seconds, 0, SettingType::Int32);
 		SETTING(AlwaysOnTop, 0, SettingType::Bool);
+		SETTING(ChimeEnabled, 1, SettingType::Bool);
 		for (int i = 0; i < (int)TimerColor::Count; i++)
 			Set(ColorName((TimerColor)i), DefaultColor((TimerColor)i), SettingType::Int32);
 	END_SETTINGS
@@ -25,6 +26,7 @@ struct AppSettings : Settings {
 	DEF_SETTING(Seconds, int)
 	DEF_SETTING(Minutes, int)
 	DEF_SETTING(AlwaysOnTop, int)
+	DEF_SETTING(ChimeEnabled, int)
 	DEF_SETTING(MainWindowPlacement, WINDOWPLACEMENT)
 
 	COLORREF Color(TimerColor color) const {
