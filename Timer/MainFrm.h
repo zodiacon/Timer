@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CountdownTimer.h"
+#include "Chime.h"
 
 class CMainFrame : 
 	public CFrameWindowImpl<CMainFrame>, 
@@ -63,6 +64,7 @@ private:
 	LRESULT OnAlwaysOnTop(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	CountdownTimer m_Timer;
+	Chime m_Chime;
 	CFont m_Font;
 	CString m_LastText;
 };

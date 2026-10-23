@@ -123,19 +123,20 @@ LRESULT CMainFrame::OnSize(UINT, WPARAM, LPARAM lp, BOOL& bHandled) {
 }
 
 LRESULT CMainFrame::OnTimer(UINT, WPARAM id, LPARAM, BOOL& bHandled) {
-	if (id == 1) {
+	// nothing changes once expired, until the user acts
+	if (id == 1 && !m_Timer.IsExpired()) {
+		auto text = m_Timer.GetRemaingTimeAsString();
 		if (m_Timer.IsExpired()) {
-			Invalidate();
 			UISetCheck(ID_TIMER_RUN, FALSE);
+			UISetCheck(ID_TIMER_PAUSE, FALSE);
+			m_Chime.Play();
+			Invalidate();
 		}
-		else {
-			auto text = m_Timer.GetRemaingTimeAsString();
-			if (text != m_LastText) {
-				m_LastText = text;
-				Invalidate();
-				if (m_Timer.IsRunning() && !m_Timer.IsPaused()) {
-					//::Beep(800, 50);
-				}
+		if (text != m_LastText) {
+			m_LastText = text;
+			Invalidate();
+			if (m_Timer.IsRunning() && !m_Timer.IsPaused()) {
+				//::Beep(800, 50);
 			}
 		}
 	}
@@ -160,6 +161,7 @@ LRESULT CMainFrame::OnPause(WORD, WORD, HWND, BOOL&) {
 }
 
 LRESULT CMainFrame::OnStop(WORD, WORD, HWND, BOOL&) {
+	m_Chime.Stop();
 	m_Timer.Stop();
 	UISetCheck(ID_TIMER_RUN, false);
 	UISetCheck(ID_TIMER_PAUSE, false);

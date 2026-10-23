@@ -6,7 +6,7 @@ bool CountdownTimer::Init(unsigned sec, unsigned min, unsigned hours) {
 	_minutes = min;
 	_hours = hours;
 
-	_running = _paused = false;
+	_running = _paused = _expired = false;
 
 	_totalSec = _hours * 3600 + _minutes * 60 + _seconds;
 	if (_totalSec == 0)
@@ -27,7 +27,7 @@ CString CountdownTimer::GetRemaingTimeAsString() {
 	auto tick = _paused ? _pause : ::GetTickCount64();
 	auto sec = _running ? (tick - _current) / 1000 : 0;
 	unsigned min = 0;
-	if (sec > _totalSec) {
+	if (_running && sec >= _totalSec) {
 		sec = 0;
 		_expired = true;
 	}
@@ -43,7 +43,8 @@ CString CountdownTimer::GetRemaingTimeAsString() {
 }
 
 bool CountdownTimer::Start(std::function<void()> whenDone) {
-	if (_running) {
+	// an expired timer starts over
+	if (_running && !_expired) {
 		if (_paused)
 			Resume();
 		return true;
@@ -57,7 +58,7 @@ bool CountdownTimer::Start(std::function<void()> whenDone) {
 }
 
 bool CountdownTimer::Pause() {
-	if (!_running)
+	if (!_running || _expired)
 		return false;
 	if (_paused)
 		return true;
