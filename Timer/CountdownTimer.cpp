@@ -40,19 +40,36 @@ double CountdownTimer::GetProgress() const {
 	return progress > 1 ? 1 : progress;
 }
 
+void CountdownTimer::SetStopwatch(bool stopwatch) {
+	_stopwatch = stopwatch;
+	Init(_seconds, _minutes);
+}
+
+bool CountdownTimer::IsStopwatch() const {
+	return _stopwatch;
+}
+
 bool CountdownTimer::Update() {
-	if (!_running || _expired || GetElapsedSeconds() < _totalSec)
+	if (_stopwatch || !_running || _expired || GetElapsedSeconds() < _totalSec)
 		return false;
 
 	_expired = true;
 	return true;
 }
 
-CString CountdownTimer::GetRemainingTimeAsString() const {
+CString CountdownTimer::GetTimeAsString() const {
 	auto elapsed = GetElapsedSeconds();
-	auto sec = elapsed >= _totalSec ? 0 : _totalSec - elapsed;
 	CString text;
-	text.Format(L"%02u:%02u", sec / 60, sec % 60);
+	if (_stopwatch) {
+		if (elapsed >= 3600)
+			text.Format(L"%u:%02u:%02u", elapsed / 3600, elapsed / 60 % 60, elapsed % 60);
+		else
+			text.Format(L"%02u:%02u", elapsed / 60, elapsed % 60);
+	}
+	else {
+		auto sec = elapsed >= _totalSec ? 0 : _totalSec - elapsed;
+		text.Format(L"%02u:%02u", sec / 60, sec % 60);
+	}
 
 	return text;
 }

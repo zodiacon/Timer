@@ -120,6 +120,9 @@
     <Image Include="res\chime.ico">
       <Filter>Resource Files\icons</Filter>
     </Image>
+    <Image Include="res\stopwatch.ico">
+      <Filter>Resource Files\icons</Filter>
+    </Image>
     <Image Include="res\pin.ico">
       <Filter>Resource Files\icons</Filter>
     </Image>

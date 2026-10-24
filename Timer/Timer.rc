@@ -113,6 +113,8 @@ IDI_PIN                 ICON                    "res\\pin.ico"
 
 IDI_CHIME               ICON                    "res\\chime.ico"
 
+IDI_STOPWATCH           ICON                    "res\\stopwatch.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -336,6 +338,7 @@ BEGIN
     ID_TIMER_COLORS         "\nColors"
     ID_OPTIONS_ALWAYSONTOP  "\nAlways On Top"
     ID_OPTIONS_CHIME        "\nChime When Done"
+    ID_OPTIONS_STOPWATCH    "\nStopwatch Mode"
 END
 
 STRINGTABLE

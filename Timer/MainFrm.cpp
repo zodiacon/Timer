@@ -63,7 +63,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	auto& settings = AppSettings::Get();
 
 	m_Timer.Init(settings.Seconds(), settings.Minutes());
-	m_LastText = m_Timer.GetRemainingTimeAsString();
+	SetStopwatch(settings.Stopwatch());
 	SetAlwaysOnTop(settings.AlwaysOnTop());
 	UISetCheck(ID_OPTIONS_CHIME, settings.ChimeEnabled());
 
@@ -120,15 +120,21 @@ LRESULT CMainFrame::OnAppAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 }
 
 LRESULT CMainFrame::OnSize(UINT, WPARAM, LPARAM lp, BOOL& bHandled) {
+	UpdateFont();
+	bHandled = FALSE;
+	Invalidate();
+	return 0;
+}
+
+void CMainFrame::UpdateFont() {
 	CRect rc;
 	GetClientRect(&rc);
 	rc.top += 40;
 	if (m_Font)
 		m_Font.DeleteObject();
-	m_Font.CreateFont(rc.Height() * 130 / 100, rc.Width() * 100 / 550, 0, 0, 500, 0, 0, 0, 0, 0, 0, 0, 0, L"Consolas");
-	bHandled = FALSE;
-	Invalidate();
-	return 0;
+	// fit the current text (plus half a character of margin) across the width
+	int chars = max(m_LastText.GetLength(), 5);
+	m_Font.CreateFont(rc.Height() * 130 / 100, rc.Width() * 100 / (chars * 100 + 50), 0, 0, 500, 0, 0, 0, 0, 0, 0, 0, 0, L"Consolas");
 }
 
 LRESULT CMainFrame::OnTimer(UINT, WPARAM id, LPARAM, BOOL& bHandled) {
@@ -144,9 +150,12 @@ LRESULT CMainFrame::OnTimer(UINT, WPARAM id, LPARAM, BOOL& bHandled) {
 			::FlashWindowEx(&fi);
 			Invalidate();
 		}
-		auto text = m_Timer.GetRemainingTimeAsString();
+		auto text = m_Timer.GetTimeAsString();
 		if (text != m_LastText) {
+			bool resize = text.GetLength() != m_LastText.GetLength();
 			m_LastText = text;
+			if (resize)
+				UpdateFont();
 			Invalidate();
 		}
 	}
@@ -254,6 +263,28 @@ LRESULT CMainFrame::OnChime(WORD, WORD id, HWND, BOOL&) {
 	return 0;
 }
 
+LRESULT CMainFrame::OnStopwatch(WORD, WORD, HWND, BOOL&) {
+	auto& settings = AppSettings::Get();
+	bool stopwatch;
+	settings.Stopwatch(stopwatch = !settings.Stopwatch());
+	m_Chime.Stop();
+	SetStopwatch(stopwatch);
+
+	return 0;
+}
+
+void CMainFrame::SetStopwatch(bool stopwatch) {
+	m_Timer.SetStopwatch(stopwatch);
+	UISetCheck(ID_OPTIONS_STOPWATCH, stopwatch);
+	UISetCheck(ID_TIMER_RUN, false);
+	UISetCheck(ID_TIMER_PAUSE, false);
+	// the interval only applies to a countdown
+	UIEnable(ID_TIMER_CONFIGURE, !stopwatch);
+	m_LastText = m_Timer.GetTimeAsString();
+	UpdateFont();
+	Invalidate();
+}
+
 LRESULT CMainFrame::OnTaskbarButtonCreated(UINT, WPARAM, LPARAM, BOOL&) {
 	// sent again if Explorer restarts, with a fresh button
 	m_Taskbar.Release();
@@ -283,14 +314,15 @@ void CMainFrame::UpdateTitleAndTaskbar() {
 	if (!m_Taskbar)
 		return;
 
+	// a running stopwatch has no end, so it shows the indeterminate animation
 	auto state = !m_Timer.IsRunning() || m_Timer.IsExpired() ? TBPF_NOPROGRESS :
-		m_Timer.IsPaused() ? TBPF_PAUSED : TBPF_NORMAL;
+		m_Timer.IsPaused() ? TBPF_PAUSED : m_Timer.IsStopwatch() ? TBPF_INDETERMINATE : TBPF_NORMAL;
 	if (state != m_TaskbarState) {
 		m_TaskbarState = state;
 		m_Taskbar->SetProgressState(m_hWnd, state);
 	}
-	if (state != TBPF_NOPROGRESS)
-		m_Taskbar->SetProgressValue(m_hWnd, (ULONGLONG)(m_Timer.GetProgress() * 1000), 1000);
+	if (state == TBPF_NORMAL || state == TBPF_PAUSED)
+		m_Taskbar->SetProgressValue(m_hWnd, m_Timer.IsStopwatch() ? 1000 : (ULONGLONG)(m_Timer.GetProgress() * 1000), 1000);
 }
 
 void CMainFrame::InitToolBar(CToolBarCtrl& tb, int size) {
@@ -310,6 +342,7 @@ void CMainFrame::InitToolBar(CToolBarCtrl& tb, int size) {
 		{ ID_TIMER_PAUSE, IDI_PAUSE },
 		{ 0 },
 		{ ID_TIMER_RESTART, IDI_RESTART },
+		{ ID_OPTIONS_STOPWATCH, IDI_STOPWATCH },
 		{ 0 },
 		{ ID_TIMER_COLORS , IDI_COLORS },
 		{ ID_TIMER_CONFIGURE , IDI_CONFIGURE, BTNS_DROPDOWN },

@@ -246,6 +246,7 @@
     <Image Include="res\preferences.ico" />
     <Image Include="res\restart.ico" />
     <Image Include="res\stop.ico" />
+    <Image Include="res\stopwatch.ico" />
     <Image Include="res\Timer.ico" />
   </ItemGroup>
   <ItemGroup>

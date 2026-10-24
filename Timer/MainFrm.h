@@ -37,6 +37,7 @@ public:
 		COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
 		COMMAND_ID_HANDLER(ID_OPTIONS_ALWAYSONTOP, OnAlwaysOnTop)
 		COMMAND_ID_HANDLER(ID_OPTIONS_CHIME, OnChime)
+		COMMAND_ID_HANDLER(ID_OPTIONS_STOPWATCH, OnStopwatch)
 		COMMAND_ID_HANDLER(ID_APP_ABOUT, OnAppAbout)
 		MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
 		CHAIN_MSG_MAP(CDoubleBufferImpl<CMainFrame>)
@@ -53,6 +54,8 @@ private:
 	void InitToolBar(CToolBarCtrl& tb, int size = 24);
 	void SetAlwaysOnTop(bool ontop);
 	void SetInterval(unsigned min, unsigned sec);
+	void SetStopwatch(bool stopwatch);
+	void UpdateFont();
 	void UpdateTitleAndTaskbar();
 
 	static inline const UINT s_TaskbarButtonCreated = ::RegisterWindowMessage(L"TaskbarButtonCreated");
@@ -72,6 +75,7 @@ private:
 	LRESULT OnRestart(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnAlwaysOnTop(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnChime(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnStopwatch(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnTaskbarButtonCreated(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnToolbarDropDown(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 

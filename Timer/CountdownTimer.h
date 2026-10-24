@@ -7,9 +7,14 @@ public:
 	unsigned GetSeconds() const;
 	unsigned GetMinutes() const;
 
+	// a stopwatch counts up from zero and never expires; switching resets the timer
+	void SetStopwatch(bool stopwatch);
+	bool IsStopwatch() const;
+
 	// returns true only on the call where the countdown reaches zero
 	bool Update();
-	CString GetRemainingTimeAsString() const;
+	// remaining time for a countdown, elapsed time for a stopwatch
+	CString GetTimeAsString() const;
 	// fraction of the interval that has elapsed, 0 to 1
 	double GetProgress() const;
 
@@ -31,5 +36,6 @@ private:
 	DWORD64 _current, _pause;
 	bool _running{ false }, _paused{ false };
 	bool _expired{ false };
+	bool _stopwatch{ false };
 };
 
